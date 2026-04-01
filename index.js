@@ -112,7 +112,7 @@ async function run() {
           description: "Try a 100% plant-based diet for 7 days to cut your carbon footprint.",
           duration: 7,
           target: "100% plant-based meals",
-          participants: 276,
+          participants: 280,
           impactMetric: "kg CO2 reduced",
           co2Saved: 95,
           createdBy: "admin@ecotrack.com",
