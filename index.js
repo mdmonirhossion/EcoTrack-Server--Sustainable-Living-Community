@@ -67,7 +67,7 @@ async function run() {
           description: "Replace your daily commute with cycling for one full week.",
           duration: 7,
           target: "Zero car trips for 7 days",
-          participants: 312,
+          participants: 352,
           impactMetric: "kg CO2 saved",
           co2Saved: 85,
           createdBy: "admin@ecotrack.com",
