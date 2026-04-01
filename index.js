@@ -10,7 +10,6 @@ app.use(cors());
 app.use(express.json());
 
 const uri = process.env.MONGODB_URI;
-
 const client = new MongoClient(uri);
 
 async function run() {
@@ -216,8 +215,12 @@ async function run() {
     // ── STATS ──
     app.get("/api/stats", async (req, res) => {
       const challenges = await challengesCollection.find().toArray();
-      const totalParticipants = challenges.reduce((a, c) => a + (c.participants || 0), 0);
-      const totalCo2Saved = challenges.reduce((a, c) => a + (c.co2Saved || 0), 0);
+      const totalParticipants = challenges.reduce(
+        (a, c) => a + (c.participants || 0), 0
+      );
+      const totalCo2Saved = challenges.reduce(
+        (a, c) => a + (c.co2Saved || 0), 0
+      );
       res.send({
         totalChallenges: challenges.length,
         totalParticipants,
@@ -225,26 +228,44 @@ async function run() {
       });
     });
 
-    // ── CHALLENGES ──
+    // ── FEATURED CHALLENGES ──
     app.get("/api/challenges/featured", async (req, res) => {
       const result = await challengesCollection
-        .find({ featured: true }).limit(3).toArray();
+        .find({ featured: true })
+        .limit(3)
+        .toArray();
       res.send(result);
     });
 
+    // ── ALL CHALLENGES with Advanced Filtering ──
     app.get("/api/challenges", async (req, res) => {
-      const { category, minP, maxP } = req.query;
+      const { category, minP, maxP, startDate, endDate } = req.query;
       let filter = {};
-      if (category) filter.category = { $in: category.split(",") };
+
+      // Category filter using $in
+      if (category && category !== "All") {
+        filter.category = { $in: category.split(",") };
+      }
+
+      // Participants range filter using $gte / $lte
       if (minP || maxP) {
         filter.participants = {};
         if (minP) filter.participants.$gte = parseInt(minP);
         if (maxP) filter.participants.$lte = parseInt(maxP);
       }
+
+      // Date range filter using $gte / $lte on startDate
+      if (startDate || endDate) {
+        filter.startDate = {};
+        if (startDate) filter.startDate.$gte = startDate;
+        if (endDate) filter.startDate.$lte = endDate;
+      }
+
       const result = await challengesCollection.find(filter).toArray();
       res.send(result);
     });
 
+    // ── CHALLENGE BY ID ──
     app.get("/api/challenges/:id", async (req, res) => {
       const result = await challengesCollection.findOne({
         _id: new ObjectId(req.params.id),
@@ -252,17 +273,20 @@ async function run() {
       res.send(result);
     });
 
+    // ── CREATE CHALLENGE ──
     app.post("/api/challenges", async (req, res) => {
       const challenge = {
         ...req.body,
         participants: 0,
         co2Saved: 0,
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
       const result = await challengesCollection.insertOne(challenge);
       res.send(result);
     });
 
+    // ── UPDATE CHALLENGE ──
     app.patch("/api/challenges/:id", async (req, res) => {
       const result = await challengesCollection.updateOne(
         { _id: new ObjectId(req.params.id) },
@@ -271,6 +295,7 @@ async function run() {
       res.send(result);
     });
 
+    // ── DELETE CHALLENGE ──
     app.delete("/api/challenges/:id", async (req, res) => {
       const result = await challengesCollection.deleteOne({
         _id: new ObjectId(req.params.id),
@@ -278,26 +303,33 @@ async function run() {
       res.send(result);
     });
 
+    // ── JOIN CHALLENGE ──
     app.post("/api/challenges/join/:id", async (req, res) => {
       const { userId } = req.body;
       const challengeId = req.params.id;
+
       const existing = await userChallengesCollection.findOne({
         userId,
         challengeId,
       });
-      if (existing)
+      if (existing) {
         return res.status(400).send({ message: "Already joined" });
+      }
+
       await userChallengesCollection.insertOne({
         userId,
         challengeId,
         status: "Not Started",
         progress: 0,
         joinDate: new Date(),
+        updatedAt: new Date(),
       });
+
       await challengesCollection.updateOne(
         { _id: new ObjectId(challengeId) },
         { $inc: { participants: 1 } }
       );
+
       res.send({ message: "Joined successfully" });
     });
 
@@ -329,6 +361,7 @@ async function run() {
       res.send(result);
     });
 
+    // ── UPDATE PROGRESS ──
     app.patch("/api/my-activities/:id/progress", async (req, res) => {
       const { progress, status } = req.body;
       const result = await userChallengesCollection.updateOne(
@@ -338,15 +371,18 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/", (req, res) => res.send("🌿 EcoTrack Server Running!"));
+    // ── ROOT ──
+    app.get("/", (req, res) =>
+      res.send("🌿 EcoTrack Server Running!")
+    );
 
     app.listen(port, () =>
       console.log(`🚀 Server running on port ${port}`)
     );
+
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);
   }
 }
 
 run();
-
