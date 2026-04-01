@@ -8,23 +8,230 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
-// const uri = "mongodb+srv://Monir:<db_password>@ecotrack-server.pnvhcn2.mongodb.net/?appName=Ecotrack-server";
+
 const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri, {
-  serverApi: { version: ServerApiVersion.v1 }
-});
+
+const client = new MongoClient(uri);
 
 async function run() {
   try {
     await client.connect();
-    const db = client.db("ecotrackDB");
+    console.log("✅ Connected to MongoDB!");
 
+    const db = client.db("ecotrackDB");
     const challengesCollection = db.collection("challenges");
     const tipsCollection = db.collection("tips");
     const eventsCollection = db.collection("events");
     const userChallengesCollection = db.collection("userChallenges");
 
-    // ── Challenges ──
+    // ── SEED ──
+    app.get("/seed", async (req, res) => {
+      await challengesCollection.deleteMany({});
+      await tipsCollection.deleteMany({});
+      await eventsCollection.deleteMany({});
+
+      await challengesCollection.insertMany([
+        {
+          title: "Plastic-Free July",
+          category: "Waste Reduction",
+          description: "Avoid single-use plastic for one full month and help reduce ocean pollution.",
+          duration: 30,
+          target: "Reduce plastic waste by 100%",
+          participants: 245,
+          impactMetric: "kg plastic saved",
+          co2Saved: 120,
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-07-01",
+          endDate: "2025-07-31",
+          imageUrl: "https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=800",
+          featured: true,
+        },
+        {
+          title: "30-Day Energy Saver",
+          category: "Energy Conservation",
+          description: "Reduce your household energy consumption by 20% over 30 days.",
+          duration: 30,
+          target: "Save 20% on electricity bill",
+          participants: 189,
+          impactMetric: "kWh saved",
+          co2Saved: 200,
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-08-01",
+          endDate: "2025-08-31",
+          imageUrl: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800",
+          featured: true,
+        },
+        {
+          title: "Cycle to Work Week",
+          category: "Sustainable Transport",
+          description: "Replace your daily commute with cycling for one full week.",
+          duration: 7,
+          target: "Zero car trips for 7 days",
+          participants: 312,
+          impactMetric: "kg CO2 saved",
+          co2Saved: 85,
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-09-01",
+          endDate: "2025-09-07",
+          imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+          featured: true,
+        },
+        {
+          title: "Water Conservation Month",
+          category: "Water Conservation",
+          description: "Track and reduce your daily water usage by 30% this month.",
+          duration: 30,
+          target: "Save 30% water daily",
+          participants: 134,
+          impactMetric: "liters water saved",
+          co2Saved: 50,
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-10-01",
+          endDate: "2025-10-31",
+          imageUrl: "https://images.unsplash.com/photo-1538300342682-cf57afb97285?w=800",
+          featured: false,
+        },
+        {
+          title: "Home Composting Challenge",
+          category: "Green Living",
+          description: "Start composting your kitchen waste at home this month.",
+          duration: 21,
+          target: "Compost all kitchen waste",
+          participants: 98,
+          impactMetric: "kg food waste composted",
+          co2Saved: 40,
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-11-01",
+          endDate: "2025-11-21",
+          imageUrl: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+          featured: false,
+        },
+        {
+          title: "Go Vegan for a Week",
+          category: "Green Living",
+          description: "Try a 100% plant-based diet for 7 days to cut your carbon footprint.",
+          duration: 7,
+          target: "100% plant-based meals",
+          participants: 276,
+          impactMetric: "kg CO2 reduced",
+          co2Saved: 95,
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-12-01",
+          endDate: "2025-12-07",
+          imageUrl: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+          featured: false,
+        },
+      ]);
+
+      await tipsCollection.insertMany([
+        {
+          title: "Compost your kitchen waste",
+          content: "Turn vegetable peels and food scraps into rich compost for your garden.",
+          category: "Waste Management",
+          author: "eco@user.com",
+          authorName: "Green User",
+          upvotes: 42,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Switch to LED bulbs",
+          content: "LED bulbs use 75% less energy and last 25x longer than incandescent bulbs.",
+          category: "Energy Conservation",
+          author: "eco2@user.com",
+          authorName: "Energy Saver",
+          upvotes: 35,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Use reusable shopping bags",
+          content: "A single reusable bag can replace hundreds of plastic bags over its lifetime.",
+          category: "Waste Reduction",
+          author: "eco3@user.com",
+          authorName: "Zero Waste",
+          upvotes: 28,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Fix leaky faucets immediately",
+          content: "A dripping tap can waste over 3,000 liters of water per year.",
+          category: "Water Conservation",
+          author: "eco4@user.com",
+          authorName: "Water Watch",
+          upvotes: 19,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Cycle to work once a week",
+          content: "Replacing one car trip per week with cycling cuts your carbon footprint significantly.",
+          category: "Sustainable Transport",
+          author: "eco5@user.com",
+          authorName: "Cycle Hero",
+          upvotes: 54,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+
+      await eventsCollection.insertMany([
+        {
+          title: "Community Clean-up Day",
+          description: "Join our neighborhood clean-up event to make our streets greener.",
+          date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "Central Park, Dhaka",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 50,
+          currentParticipants: 18,
+        },
+        {
+          title: "Tree Plantation Drive",
+          description: "Plant 500 trees with fellow eco-warriors this weekend.",
+          date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "Botanical Garden, Mirpur",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 100,
+          currentParticipants: 63,
+        },
+        {
+          title: "Solar Energy Workshop",
+          description: "Learn how to set up solar panels for your home.",
+          date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "BUET Auditorium, Dhaka",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 80,
+          currentParticipants: 45,
+        },
+        {
+          title: "Zero Waste Cooking Class",
+          description: "Cook delicious meals using every part of your vegetables.",
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "Community Center, Gulshan",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 30,
+          currentParticipants: 12,
+        },
+      ]);
+
+      res.send({ message: "✅ Seed data inserted successfully!" });
+    });
+
+    // ── STATS ──
+    app.get("/api/stats", async (req, res) => {
+      const challenges = await challengesCollection.find().toArray();
+      const totalParticipants = challenges.reduce((a, c) => a + (c.participants || 0), 0);
+      const totalCo2Saved = challenges.reduce((a, c) => a + (c.co2Saved || 0), 0);
+      res.send({
+        totalChallenges: challenges.length,
+        totalParticipants,
+        totalCo2Saved,
+      });
+    });
+
+    // ── CHALLENGES ──
+    app.get("/api/challenges/featured", async (req, res) => {
+      const result = await challengesCollection
+        .find({ featured: true }).limit(3).toArray();
+      res.send(result);
+    });
+
     app.get("/api/challenges", async (req, res) => {
       const { category, minP, maxP } = req.query;
       let filter = {};
@@ -46,7 +253,12 @@ async function run() {
     });
 
     app.post("/api/challenges", async (req, res) => {
-      const challenge = { ...req.body, participants: 0, createdAt: new Date() };
+      const challenge = {
+        ...req.body,
+        participants: 0,
+        co2Saved: 0,
+        createdAt: new Date(),
+      };
       const result = await challengesCollection.insertOne(challenge);
       res.send(result);
     });
@@ -66,16 +278,21 @@ async function run() {
       res.send(result);
     });
 
-    // Join challenge
     app.post("/api/challenges/join/:id", async (req, res) => {
       const { userId } = req.body;
       const challengeId = req.params.id;
-      const existing = await userChallengesCollection.findOne({ userId, challengeId });
-      if (existing) return res.status(400).send({ message: "Already joined" });
-
+      const existing = await userChallengesCollection.findOne({
+        userId,
+        challengeId,
+      });
+      if (existing)
+        return res.status(400).send({ message: "Already joined" });
       await userChallengesCollection.insertOne({
-        userId, challengeId,
-        status: "Not Started", progress: 0, joinDate: new Date(),
+        userId,
+        challengeId,
+        status: "Not Started",
+        progress: 0,
+        joinDate: new Date(),
       });
       await challengesCollection.updateOne(
         { _id: new ObjectId(challengeId) },
@@ -84,25 +301,31 @@ async function run() {
       res.send({ message: "Joined successfully" });
     });
 
-    // ── Tips ──
+    // ── TIPS ──
     app.get("/api/tips", async (req, res) => {
       const result = await tipsCollection
-        .find().sort({ createdAt: -1 }).limit(5).toArray();
+        .find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .toArray();
       res.send(result);
     });
 
-    // ── Events ──
+    // ── EVENTS ──
     app.get("/api/events", async (req, res) => {
       const result = await eventsCollection
         .find({ date: { $gte: new Date().toISOString() } })
-        .sort({ date: 1 }).limit(4).toArray();
+        .sort({ date: 1 })
+        .limit(4)
+        .toArray();
       res.send(result);
     });
 
-    // ── My Activities ──
+    // ── MY ACTIVITIES ──
     app.get("/api/my-activities/:userId", async (req, res) => {
       const result = await userChallengesCollection
-        .find({ userId: req.params.userId }).toArray();
+        .find({ userId: req.params.userId })
+        .toArray();
       res.send(result);
     });
 
@@ -115,255 +338,15 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/", (req, res) => res.send("EcoTrack Server Running ✅"));
-    app.listen(port, () => console.log(`Server running on port ${port}`));
+    app.get("/", (req, res) => res.send("🌿 EcoTrack Server Running!"));
+
+    app.listen(port, () =>
+      console.log(`🚀 Server running on port ${port}`)
+    );
   } catch (err) {
-    console.error(err);
+    console.error("❌ MongoDB connection error:", err.message);
   }
 }
+
 run();
 
-// const express = require("express");
-// const cors = require("cors");
-// const dotenv = require("dotenv");
-// const { MongoClient, ObjectId } = require("mongodb");
-
-// dotenv.config();
-
-// const app = express();
-// const port = process.env.PORT || 5000;
-// const uri = "mongodb+srv://mdmamunh608_db_user:uSpNDK6sGFkJXtdb@ecotrack-server.pnvhcn2.mongodb.net/?appName=Ecotrack-server";
-// // const client = new MongoClient(uri, {
-// //   serverApi: {
-// //     version: ServerApiVersion.v1,
-// //     strict: true,
-// //     deprecationErrors: true,
-// //   }
-// // });
-// app.use(
-//   cors({
-//     origin: process.env.CLIENT_URL?.split(",") || "*",
-//     credentials: true,
-//   })
-// );
-// app.use(express.json());
-
-// const client = new MongoClient(process.env.MONGODB_URI || "");
-
-// const db = client.db(process.env.DB_NAME || "ecotrack");
-// const challengesCollection = db.collection("challenges");
-// const userChallengesCollection = db.collection("userChallenges");
-// const tipsCollection = db.collection("tips");
-// const eventsCollection = db.collection("events");
-
-// const parseDate = (value) => {
-//   if (!value) return null;
-//   const d = new Date(value);
-//   return Number.isNaN(d.getTime()) ? null : d;
-// };
-
-// const toObjectId = (id) => {
-//   try {
-//     return new ObjectId(id);
-//   } catch {
-//     return null;
-//   }
-// };
-
-// app.get("/", (_req, res) => {
-//   res.json({ status: "ok", app: "EcoTrack API" });
-// });
-
-// app.get("/api/challenges", async (req, res) => {
-//   const { categories, startDate, endDate, minParticipants, maxParticipants } = req.query;
-
-//   const filter = {};
-//   if (categories) {
-//     const categoryList = categories
-//       .split(",")
-//       .map((c) => c.trim())
-//       .filter(Boolean);
-//     if (categoryList.length) {
-//       filter.category = { $in: categoryList };
-//     }
-//   }
-
-//   const start = parseDate(startDate);
-//   const end = parseDate(endDate);
-//   if (start || end) {
-//     filter.startDate = {};
-//     if (start) filter.startDate.$gte = start;
-//     if (end) filter.startDate.$lte = end;
-//   }
-
-//   const min = Number(minParticipants);
-//   const max = Number(maxParticipants);
-//   if (!Number.isNaN(min) || !Number.isNaN(max)) {
-//     filter.participants = {};
-//     if (!Number.isNaN(min)) filter.participants.$gte = min;
-//     if (!Number.isNaN(max)) filter.participants.$lte = max;
-//   }
-
-//   const items = await challengesCollection.find(filter).sort({ createdAt: -1 }).toArray();
-//   res.json(items);
-// });
-
-// app.get("/api/challenges/:id", async (req, res) => {
-//   const _id = toObjectId(req.params.id);
-//   if (!_id) return res.status(400).json({ message: "Invalid challenge id." });
-
-//   const item = await challengesCollection.findOne({ _id });
-//   if (!item) return res.status(404).json({ message: "Challenge not found." });
-//   res.json(item);
-// });
-
-// app.post("/api/challenges", async (req, res) => {
-//   const payload = req.body || {};
-//   const now = new Date();
-//   const doc = {
-//     title: payload.title,
-//     category: payload.category,
-//     description: payload.description,
-//     duration: Number(payload.duration) || 0,
-//     target: payload.target,
-//     participants: 0,
-//     impactMetric: payload.impactMetric,
-//     createdBy: payload.createdBy,
-//     startDate: parseDate(payload.startDate),
-//     endDate: parseDate(payload.endDate),
-//     imageUrl: payload.imageUrl,
-//     createdAt: now,
-//     updatedAt: now,
-//   };
-
-//   if (!doc.title || !doc.category || !doc.description || !doc.createdBy) {
-//     return res.status(400).json({ message: "Missing required fields." });
-//   }
-
-//   const result = await challengesCollection.insertOne(doc);
-//   res.status(201).json({ insertedId: result.insertedId });
-// });
-
-// app.patch("/api/challenges/:id", async (req, res) => {
-//   const _id = toObjectId(req.params.id);
-//   if (!_id) return res.status(400).json({ message: "Invalid challenge id." });
-
-//   const update = { ...req.body, updatedAt: new Date() };
-//   delete update._id;
-//   if (update.startDate) update.startDate = parseDate(update.startDate);
-//   if (update.endDate) update.endDate = parseDate(update.endDate);
-
-//   const result = await challengesCollection.updateOne({ _id }, { $set: update });
-//   if (!result.matchedCount) return res.status(404).json({ message: "Challenge not found." });
-//   res.json({ message: "Challenge updated." });
-// });
-
-// app.delete("/api/challenges/:id", async (req, res) => {
-//   const _id = toObjectId(req.params.id);
-//   if (!_id) return res.status(400).json({ message: "Invalid challenge id." });
-
-//   const result = await challengesCollection.deleteOne({ _id });
-//   if (!result.deletedCount) return res.status(404).json({ message: "Challenge not found." });
-//   res.json({ message: "Challenge deleted." });
-// });
-
-// app.post("/api/challenges/join/:id", async (req, res) => {
-//   const _id = toObjectId(req.params.id);
-//   const { userId } = req.body || {};
-//   if (!_id || !userId) return res.status(400).json({ message: "Invalid request." });
-
-//   const existing = await userChallengesCollection.findOne({ challengeId: _id, userId });
-//   if (existing) return res.status(409).json({ message: "Already joined this challenge." });
-
-//   const challenge = await challengesCollection.findOne({ _id });
-//   if (!challenge) return res.status(404).json({ message: "Challenge not found." });
-
-//   await userChallengesCollection.insertOne({
-//     userId,
-//     challengeId: _id,
-//     status: "Not Started",
-//     progress: 0,
-//     joinDate: new Date(),
-//     updatedAt: new Date(),
-//   });
-
-//   await challengesCollection.updateOne({ _id }, { $inc: { participants: 1 }, $set: { updatedAt: new Date() } });
-//   res.status(201).json({ message: "Joined successfully." });
-// });
-
-// app.get("/api/my-activities", async (req, res) => {
-//   const { userId } = req.query;
-//   if (!userId) return res.status(400).json({ message: "userId is required." });
-
-//   const items = await userChallengesCollection
-//     .aggregate([
-//       { $match: { userId } },
-//       {
-//         $lookup: {
-//           from: "challenges",
-//           localField: "challengeId",
-//           foreignField: "_id",
-//           as: "challenge",
-//         },
-//       },
-//       { $unwind: "$challenge" },
-//       { $sort: { joinDate: -1 } },
-//     ])
-//     .toArray();
-
-//   res.json(items);
-// });
-
-// app.patch("/api/my-activities/:id", async (req, res) => {
-//   const _id = toObjectId(req.params.id);
-//   if (!_id) return res.status(400).json({ message: "Invalid activity id." });
-
-//   const { progress, status } = req.body || {};
-//   const update = { updatedAt: new Date() };
-//   if (typeof progress === "number") update.progress = Math.min(100, Math.max(0, progress));
-//   if (status) update.status = status;
-
-//   const result = await userChallengesCollection.updateOne({ _id }, { $set: update });
-//   if (!result.matchedCount) return res.status(404).json({ message: "Activity not found." });
-//   res.json({ message: "Progress updated." });
-// });
-
-// app.get("/api/tips/recent", async (_req, res) => {
-//   const tips = await tipsCollection.find().sort({ createdAt: -1 }).limit(5).toArray();
-//   res.json(tips);
-// });
-
-// app.get("/api/events/upcoming", async (_req, res) => {
-//   const now = new Date();
-//   const events = await eventsCollection.find({ date: { $gte: now } }).sort({ date: 1 }).limit(4).toArray();
-//   res.json(events);
-// });
-
-// app.get("/api/stats/live", async (_req, res) => {
-//   const totalChallenges = await challengesCollection.countDocuments();
-//   const aggregateParticipants = await challengesCollection
-//     .aggregate([{ $group: { _id: null, sum: { $sum: "$participants" } } }])
-//     .toArray();
-//   res.json({
-//     totalChallenges,
-//     totalParticipants: aggregateParticipants[0]?.sum || 0,
-//   });
-// });
-
-// async function startServer() {
-//   try {
-//     if (!process.env.MONGODB_URI) {
-//       throw new Error("MONGODB_URI is missing in environment variables.");
-//     }
-
-//     await client.connect();
-//     app.listen(port, () => {
-//       console.log(`EcoTrack API running on port ${port}`);
-//     });
-//   } catch (error) {
-//     console.error(error.message);
-//     process.exit(1);
-//   }
-// }
-
-// startServer();
