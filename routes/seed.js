@@ -1,0 +1,178 @@
+export default function registerSeedRoute(app, tipsCollection, eventsCollection, challengesCollection) {
+  app.get("/seed", async (req, res) => {
+    try {
+      await tipsCollection.insertMany([
+        {
+          title: "Compost your kitchen waste",
+          content: "Turn vegetable peels and food scraps into rich compost for your garden.",
+          category: "Waste Management",
+          author: "eco@user.com",
+          authorName: "Green User",
+          upvotes: 42,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Switch to LED bulbs",
+          content: "LED bulbs use 75% less energy and last 25x longer than incandescent bulbs.",
+          category: "Energy Conservation",
+          author: "eco2@user.com",
+          authorName: "Energy Saver",
+          upvotes: 35,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Use reusable shopping bags",
+          content: "A single reusable bag can replace hundreds of plastic bags over its lifetime.",
+          category: "Waste Reduction",
+          author: "eco3@user.com",
+          authorName: "Zero Waste",
+          upvotes: 28,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Fix leaky faucets immediately",
+          content: "A dripping tap can waste over 3,000 liters of water per year.",
+          category: "Water Conservation",
+          author: "eco4@user.com",
+          authorName: "Water Watch",
+          upvotes: 19,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          title: "Cycle to work once a week",
+          content: "Replacing one car trip per week with cycling cuts your carbon footprint significantly.",
+          category: "Sustainable Transport",
+          author: "eco5@user.com",
+          authorName: "Cycle Hero",
+          upvotes: 54,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+
+      await eventsCollection.insertMany([
+        {
+          title: "Community Clean-up Day",
+          description: "Join our neighborhood clean-up event to make our streets greener.",
+          date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "Central Park, Dhaka",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 50,
+          currentParticipants: 18,
+        },
+        {
+          title: "Tree Plantation Drive",
+          description: "Plant 500 trees with fellow eco-warriors this weekend.",
+          date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "Botanical Garden, Mirpur",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 100,
+          currentParticipants: 63,
+        },
+        {
+          title: "Solar Energy Workshop",
+          description: "Learn how to set up solar panels for your home.",
+          date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "BUET Auditorium, Dhaka",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 80,
+          currentParticipants: 45,
+        },
+        {
+          title: "Zero Waste Cooking Class",
+          description: "Cook delicious meals using every part of your vegetables.",
+          date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          location: "Community Center, Gulshan",
+          organizer: "admin@ecotrack.com",
+          maxParticipants: 30,
+          currentParticipants: 12,
+        },
+      ]);
+
+      await challengesCollection.insertMany([
+        {
+          title: "Plastic-Free July",
+          category: "Waste Reduction",
+          description: "Avoid single-use plastic for one full month.",
+          duration: 30,
+          target: "Reduce plastic waste by 100%",
+          participants: 245,
+          impactMetric: "kg plastic saved",
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-07-01",
+          endDate: "2025-07-31",
+          imageUrl: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600",
+        },
+        {
+          title: "30-Day Energy Saver",
+          category: "Energy Conservation",
+          description: "Reduce your household energy consumption by 20%.",
+          duration: 30,
+          target: "Save 20% on electricity bill",
+          participants: 189,
+          impactMetric: "kWh saved",
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-08-01",
+          endDate: "2025-08-31",
+          imageUrl: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600",
+        },
+        {
+          title: "Cycle to Work Week",
+          category: "Sustainable Transport",
+          description: "Replace your daily commute with cycling for one week.",
+          duration: 7,
+          target: "Zero car trips for 7 days",
+          participants: 312,
+          impactMetric: "kg CO2 saved",
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-09-01",
+          endDate: "2025-09-07",
+          imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600",
+        },
+        {
+          title: "Water Conservation Month",
+          category: "Water Conservation",
+          description: "Track and reduce your daily water usage by 30%.",
+          duration: 30,
+          target: "Save 30% water daily",
+          participants: 134,
+          impactMetric: "liters water saved",
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-10-01",
+          endDate: "2025-10-31",
+          imageUrl: "https://images.unsplash.com/photo-1538300342682-cf57afb97285?w=600",
+        },
+        {
+          title: "Home Composting Challenge",
+          category: "Green Living",
+          description: "Start composting your kitchen waste at home.",
+          duration: 21,
+          target: "Compost all kitchen waste",
+          participants: 98,
+          impactMetric: "kg food waste composted",
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-11-01",
+          endDate: "2025-11-21",
+          imageUrl: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600",
+        },
+        {
+          title: "Go Vegan for a Week",
+          category: "Green Living",
+          description: "Try a plant-based diet for 7 days to reduce your carbon footprint.",
+          duration: 7,
+          target: "100% plant-based meals",
+          participants: 276,
+          impactMetric: "kg CO2 reduced",
+          createdBy: "admin@ecotrack.com",
+          startDate: "2025-12-01",
+          endDate: "2025-12-07",
+          imageUrl: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600",
+        },
+      ]);
+
+      res.json({ message: "✅ Seed data inserted!" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to seed data." });
+    }
+  });
+}
