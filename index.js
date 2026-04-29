@@ -7,7 +7,16 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5000', 'http://localhost:5001', 'http://localhost:5002', 'https://ecotrack-client.vercel.app', 'https://ecotrack-app-202c8.web.app', 'https://ecotrack-app-202c8.firebaseapp.com'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5000', 
+    'http://localhost:5001', 
+    'http://localhost:5002', 
+    'https://ecotrack-client.vercel.app', 
+    'https://eco-track-client-sustainable-living.vercel.app',
+    'https://ecotrack-app-202c8.web.app', 
+    'https://ecotrack-app-202c8.firebaseapp.com'
+  ],
   credentials: true,
 }));
 app.use(express.json());
