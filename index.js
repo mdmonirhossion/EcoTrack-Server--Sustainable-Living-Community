@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 const app = express();
@@ -17,11 +17,14 @@ async function run() {
     await client.connect();
     console.log("✅ Connected to MongoDB!");
 
-    const db = client.db("ecotrackDB");
-    const challengesCollection = db.collection("challenges");
+    const db = client.db(process.env.DB_NAME || "ecotrackDB");
+    const challengesCollection = db.collection("Challenges");
     const tipsCollection = db.collection("tips");
     const eventsCollection = db.collection("events");
     const userChallengesCollection = db.collection("userChallenges");
+
+    // ── ROOT ──
+    app.get("/", (req, res) => res.send("🌿 EcoTrack Server Running!"));
 
     // ── SEED ──
     app.get("/seed", async (req, res) => {
@@ -212,15 +215,135 @@ async function run() {
       res.send({ message: "✅ Seed data inserted successfully!" });
     });
 
+    // ── CHALLENGES ONLY SEED (non-destructive) ──
+    // Useful when challenges collection is empty but tips/events already exist.
+    app.get("/seed-challenges", async (req, res) => {
+      try {
+        const existingCount = await challengesCollection.countDocuments({});
+        if (existingCount > 0) {
+          return res.send({
+            message: "✅ Challenges already exist; skipped seeding.",
+            totalChallenges: existingCount,
+          });
+        }
+
+        await challengesCollection.insertMany([
+          {
+            title: "Plastic-Free July",
+            category: "Waste Reduction",
+            description:
+              "Avoid single-use plastic for one full month and help reduce ocean pollution.",
+            duration: 30,
+            target: "Reduce plastic waste by 100%",
+            participants: 245,
+            impactMetric: "kg plastic saved",
+            co2Saved: 120,
+            createdBy: "admin@ecotrack.com",
+            startDate: "2025-07-01",
+            endDate: "2025-07-31",
+            imageUrl:
+              "https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=800",
+            featured: true,
+          },
+          {
+            title: "30-Day Energy Saver",
+            category: "Energy Conservation",
+            description:
+              "Reduce your household energy consumption by 20% over 30 days.",
+            duration: 30,
+            target: "Save 20% on electricity bill",
+            participants: 189,
+            impactMetric: "kWh saved",
+            co2Saved: 200,
+            createdBy: "admin@ecotrack.com",
+            startDate: "2025-08-01",
+            endDate: "2025-08-31",
+            imageUrl:
+              "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800",
+            featured: true,
+          },
+          {
+            title: "Cycle to Work Week",
+            category: "Sustainable Transport",
+            description:
+              "Replace your daily commute with cycling for one full week.",
+            duration: 7,
+            target: "Zero car trips for 7 days",
+            participants: 352,
+            impactMetric: "kg CO2 saved",
+            co2Saved: 85,
+            createdBy: "admin@ecotrack.com",
+            startDate: "2025-09-01",
+            endDate: "2025-09-07",
+            imageUrl:
+              "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+            featured: true,
+          },
+          {
+            title: "Water Conservation Month",
+            category: "Water Conservation",
+            description:
+              "Track and reduce your daily water usage by 30% this month.",
+            duration: 30,
+            target: "Save 30% water daily",
+            participants: 134,
+            impactMetric: "liters water saved",
+            co2Saved: 50,
+            createdBy: "admin@ecotrack.com",
+            startDate: "2025-10-01",
+            endDate: "2025-10-31",
+            imageUrl:
+              "https://images.unsplash.com/photo-1538300342682-cf57afb97285?w=800",
+            featured: false,
+          },
+          {
+            title: "Home Composting Challenge",
+            category: "Green Living",
+            description:
+              "Start composting your kitchen waste at home this month.",
+            duration: 21,
+            target: "Compost all kitchen waste",
+            participants: 98,
+            impactMetric: "kg food waste composted",
+            co2Saved: 40,
+            createdBy: "admin@ecotrack.com",
+            startDate: "2025-11-01",
+            endDate: "2025-11-21",
+            imageUrl:
+              "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+            featured: false,
+          },
+          {
+            title: "Go Vegan for a Week",
+            category: "Green Living",
+            description:
+              "Try a 100% plant-based diet for 7 days to cut your carbon footprint.",
+            duration: 7,
+            target: "100% plant-based meals",
+            participants: 280,
+            impactMetric: "kg CO2 reduced",
+            co2Saved: 95,
+            createdBy: "admin@ecotrack.com",
+            startDate: "2025-12-01",
+            endDate: "2025-12-07",
+            imageUrl:
+              "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+            featured: false,
+          },
+        ]);
+
+        res.send({ message: "✅ Challenges seeded successfully!" });
+      } catch (err) {
+        console.error("seed-challenges failed:", err);
+        res.status(500).send({ message: "Failed to seed challenges" });
+      }
+    });
+
     // ── STATS ──
     app.get("/api/stats", async (req, res) => {
       const challenges = await challengesCollection.find().toArray();
-      const totalParticipants = challenges.reduce(
-        (a, c) => a + (c.participants || 0), 0
-      );
-      const totalCo2Saved = challenges.reduce(
-        (a, c) => a + (c.co2Saved || 0), 0
-      );
+      const totalParticipants = challenges.reduce((a, c) => a + (c.participants || 0), 0);
+      const totalCo2Saved = challenges.reduce((a, c) => a + (c.co2Saved || 0), 0);
       res.send({
         totalChallenges: challenges.length,
         totalParticipants,
@@ -228,153 +351,106 @@ async function run() {
       });
     });
 
-    // ── FEATURED CHALLENGES ──
-    app.get("/api/challenges/featured", async (req, res) => {
-      const result = await challengesCollection
-        .find({ featured: true })
-        .limit(3)
-        .toArray();
-      res.send(result);
-    });
-
-    // ── ALL CHALLENGES with Advanced Filtering ──
-    app.get("/api/challenges", async (req, res) => {
-      const { category, minP, maxP, startDate, endDate } = req.query;
-      let filter = {};
-
-      // Category filter using $in
-      if (category && category !== "All") {
-        filter.category = { $in: category.split(",") };
-      }
-
-      // Participants range filter using $gte / $lte
-      if (minP || maxP) {
-        filter.participants = {};
-        if (minP) filter.participants.$gte = parseInt(minP);
-        if (maxP) filter.participants.$lte = parseInt(maxP);
-      }
-
-      // Date range filter using $gte / $lte on startDate
-      if (startDate || endDate) {
-        filter.startDate = {};
-        if (startDate) filter.startDate.$gte = startDate;
-        if (endDate) filter.startDate.$lte = endDate;
-      }
-
-      const result = await challengesCollection.find(filter).toArray();
-      res.send(result);
-    });
-
-    // ── CHALLENGE BY ID ──
-    app.get("/api/challenges/:id", async (req, res) => {
-      const result = await challengesCollection.findOne({
-        _id: new ObjectId(req.params.id),
-      });
-      res.send(result);
-    });
-
-    // ── CREATE CHALLENGE ──
-    app.post("/api/challenges", async (req, res) => {
-      const challenge = {
-        ...req.body,
-        participants: 0,
-        co2Saved: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      const result = await challengesCollection.insertOne(challenge);
-      res.send(result);
-    });
-
-    // ── UPDATE CHALLENGE ──
-    app.patch("/api/challenges/:id", async (req, res) => {
-      const result = await challengesCollection.updateOne(
-        { _id: new ObjectId(req.params.id) },
-        { $set: { ...req.body, updatedAt: new Date() } }
-      );
-      res.send(result);
-    });
-
-    // ── DELETE CHALLENGE ──
-    app.delete("/api/challenges/:id", async (req, res) => {
-      const result = await challengesCollection.deleteOne({
-        _id: new ObjectId(req.params.id),
-      });
-      res.send(result);
-    });
-
-    // ── JOIN CHALLENGE ──
-    app.post("/api/challenges/join/:id", async (req, res) => {
-      const { userId } = req.body;
-      const challengeId = req.params.id;
-
-      const existing = await userChallengesCollection.findOne({
-        userId,
-        challengeId,
-      });
-      if (existing) {
-        return res.status(400).send({ message: "Already joined" });
-      }
-
-      await userChallengesCollection.insertOne({
-        userId,
-        challengeId,
-        status: "Not Started",
-        progress: 0,
-        joinDate: new Date(),
-        updatedAt: new Date(),
-      });
-
-      await challengesCollection.updateOne(
-        { _id: new ObjectId(challengeId) },
-        { $inc: { participants: 1 } }
-      );
-
-      res.send({ message: "Joined successfully" });
-    });
+    // ── CHALLENGE ROUTES ──
+    const challengesRouter = require('./routes/Challenges')(
+      challengesCollection,
+      userChallengesCollection,
+      ObjectId
+    );
+    app.use('/api/challenges', challengesRouter);
+    // Some frontend code may call the older/mistyped base path.
+    // Mount the same router so it always returns JSON arrays, not 404 HTML/text.
+    app.use('/api/challengeRoutes', challengesRouter);
 
     // ── TIPS ──
-    app.get("/api/tips", async (req, res) => {
-      const result = await tipsCollection
-        .find()
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .toArray();
-      res.send(result);
+    app.get(["/api/tips", "/api/tip"], async (req, res) => {
+      try {
+        const result = await tipsCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .toArray();
+        res.json(result); // Must be an array for the frontend.
+      } catch (err) {
+        console.error("GET /api/tips failed:", err);
+        res.status(500).json([]); // Prevent frontend .slice().map crashes.
+      }
     });
 
     // ── EVENTS ──
-    app.get("/api/events", async (req, res) => {
-      const result = await eventsCollection
-        .find({ date: { $gte: new Date().toISOString() } })
-        .sort({ date: 1 })
-        .limit(4)
-        .toArray();
-      res.send(result);
+    app.get(["/api/events", "/api/event"], async (req, res) => {
+      try {
+        const result = await eventsCollection
+          .find({ date: { $gte: new Date().toISOString() } })
+          .sort({ date: 1 })
+          .limit(4)
+          .toArray();
+        res.json(result); // Must be an array for the frontend.
+      } catch (err) {
+        console.error("GET /api/events failed:", err);
+        res.status(500).json([]); // Prevent frontend failures.
+      }
+    });
+
+    // If the frontend requests a mistyped tips/events URL, return an empty array
+    // instead of HTML/text (which breaks .slice().map).
+    app.use("/api", (req, res, next) => {
+      if (req.path.startsWith("/tips") || req.path === "/tip") {
+        return res.status(404).json([]);
+      }
+      if (req.path.startsWith("/events") || req.path === "/event") {
+        return res.status(404).json([]);
+      }
+      return next();
     });
 
     // ── MY ACTIVITIES ──
-    app.get("/api/my-activities/:userId", async (req, res) => {
+    app.get("/api/my-activities", async (req, res) => {
+      const userId = req.query.userId || req.params.userId;
+
+      if (!userId) {
+        return res.status(400).send({ message: "userId is required" });
+      }
+
       const result = await userChallengesCollection
-        .find({ userId: req.params.userId })
+        .find({ userId })
         .toArray();
       res.send(result);
     });
 
-    // ── UPDATE PROGRESS ──
-    app.patch("/api/my-activities/:id/progress", async (req, res) => {
-      const { progress, status } = req.body;
-      const result = await userChallengesCollection.updateOne(
-        { _id: new ObjectId(req.params.id) },
-        { $set: { progress, status, updatedAt: new Date() } }
-      );
-      res.send(result);
+    // ── CHECK IF USER JOINED CHALLENGE ──
+    app.get("/api/my-activities/check/:challengeId", async (req, res) => {
+      const { userId } = req.query;
+      const { challengeId } = req.params;
+
+      if (!userId) {
+        return res.status(400).send({ message: "userId is required" });
+      }
+
+      const result = await userChallengesCollection.findOne({
+        userId,
+        challengeId
+      });
+
+      res.send({ joined: !!result, activity: result || null });
     });
 
-    // ── ROOT ──
-    app.get("/", (req, res) =>
-      res.send("🌿 EcoTrack Server Running!")
-    );
+    // ── UPDATE PROGRESS ──
+    const updateActivityProgress = async (req, res) => {
+      try {
+        const { progress, status } = req.body;
+        const result = await userChallengesCollection.updateOne(
+          { _id: new ObjectId(req.params.id) },
+          { $set: { progress, status, updatedAt: new Date() } }
+        );
+        res.send(result);
+      } catch {
+        res.status(400).send({ message: "Invalid ID" });
+      }
+    };
+    app.patch("/api/my-activities/:id/progress", updateActivityProgress);
+    // Alias to match frontend calls that PATCH /api/my-activities/:id
+    app.patch("/api/my-activities/:id", updateActivityProgress);
 
     app.listen(port, () =>
       console.log(`🚀 Server running on port ${port}`)
