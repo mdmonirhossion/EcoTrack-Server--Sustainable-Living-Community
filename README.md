@@ -14,7 +14,7 @@ npm install
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
 DB_NAME=ecotrackDB
-CLIENT_URL=http://localhost:5000
+CLIENT_URL=http://localhost:5173
 ```
 
 3. Seed the database:
