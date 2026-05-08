@@ -21,9 +21,20 @@ app.use(cors({
 }));
 app.use(express.json());
 
-const client = new MongoClient(process.env.MONGODB_URI);
-const db = client.db(process.env.DB_NAME);
+// index.js (Line 24 er agey eita add koren)
+const uri = process.env.MONGODB_URI;
+const dbName = process.env.DB_NAME;
 
+if (!uri) {
+    console.error("❌ ERROR: MONGODB_URI is not defined in Environment Variables.");
+}
+
+if (!dbName) {
+    console.error("❌ ERROR: DB_NAME is not defined in Environment Variables.");
+}
+
+const client = new MongoClient(uri);
+const db = client.db(dbName);
 const challengesCollection = db.collection("Challenges");
 const tipsCollection = db.collection("tips");
 const eventsCollection = db.collection("events");
