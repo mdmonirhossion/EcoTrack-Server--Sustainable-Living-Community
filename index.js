@@ -21,21 +21,23 @@ app.use(cors({
 }));
 app.use(express.json());
 
-const uri = process.env.MONGODB_URI;
-console.log("🔍 MONGODB_URI loaded:", uri ? uri.substring(0, 30) + "..." : "UNDEFINED!");
-const client = new MongoClient(uri);
+const client = new MongoClient(process.env.MONGODB_URI);
+const db = client.db(process.env.DB_NAME);
 
-// Create connections globally so Vercel can reuse them
-const db = client.db(process.env.DB_NAME || "ecotrackDB");
 const challengesCollection = db.collection("Challenges");
 const tipsCollection = db.collection("tips");
 const eventsCollection = db.collection("events");
 const userChallengesCollection = db.collection("userChallenges");
 
-// Connect asynchronously to not block Vercel cold starts
-client.connect()
-  .then(() => console.log("✅ Connected to MongoDB!"))
-  .catch(err => console.error("❌ MongoDB connection error:", err.message));
+async function run() {
+  try {
+    await client.connect();
+    console.log("✅ Connected to MongoDB!");
+  } finally {
+
+  }
+}
+run();
 
 // ── ROOT ──
 app.get("/", (req, res) => res.send("🌿 EcoTrack Server Running!"));
