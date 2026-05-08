@@ -22,6 +22,7 @@ app.use(cors({
 app.use(express.json());
 
 const uri = process.env.MONGODB_URI;
+console.log("🔍 MONGODB_URI loaded:", uri ? uri.substring(0, 30) + "..." : "UNDEFINED!");
 const client = new MongoClient(uri);
 
 // Create connections globally so Vercel can reuse them
