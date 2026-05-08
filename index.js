@@ -21,7 +21,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// index.js (Line 24 er agey eita add koren)
+
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME;
 
