@@ -8,29 +8,25 @@ const port = process.env.PORT || 5000;
 
 app.use(cors({
   origin: [
-    'http://localhost:5173', 
-    'http://localhost:5000', 
-    'http://localhost:5001', 
-    'http://localhost:5002', 
-    'https://ecotrack-client.vercel.app', 
+    'http://localhost:5173',
+    'http://localhost:5000',
+    'http://localhost:5001',
+    'http://localhost:5002',
+    'https://ecotrack-client.vercel.app',
     'https://eco-track-client-sustainable-living.vercel.app',
-    'https://ecotrack-app-202c8.web.app', 
+    'https://ecotrack-app-202c8.web.app',
     'https://ecotrack-app-202c8.firebaseapp.com'
   ],
   credentials: true,
 }));
 app.use(express.json());
 
-
 const uri = process.env.MONGODB_URI;
-const dbName = process.env.DB_NAME;
+const dbName = process.env.DB_NAME || "ecotrackDB"; // ব্যাকআপ ডাটাবেজ নাম
 
 if (!uri) {
-    console.error("❌ ERROR: MONGODB_URI is not defined in Environment Variables.");
-}
-
-if (!dbName) {
-    console.error("❌ ERROR: DB_NAME is not defined in Environment Variables.");
+  console.error("❌ ERROR: MONGODB_URI is not defined in Environment Variables.");
+  process.exit(1); // ডাটাবেজ লিংক ছাড়া সার্ভার স্টার্ট না করে প্রসেস বন্ধ করে দিবে
 }
 
 const client = new MongoClient(uri);
@@ -44,11 +40,13 @@ async function run() {
   try {
     await client.connect();
     console.log("✅ Connected to MongoDB!");
-  } finally {
-
+  } catch (error) {
+    console.error("❌ Database connection failed:", error); // এরর লগ করবে কিন্তু সার্ভার ক্র্যাশ করবে না
   }
 }
 run();
+
+
 
 // ── ROOT ──
 app.get("/", (req, res) => res.send("🌿 EcoTrack Server Running!"));
@@ -428,8 +426,9 @@ app.use("/api", (req, res, next) => {
 });
 
 // ── MY ACTIVITIES ──
-app.get("/api/my-activities", async (req, res) => {
-  const userId = req.query.userId || req.params.userId;
+// :userId? দেওয়ার ফলে /api/my-activities/userID এবং /api/my-activities?userId=userID দুটিই কাজ করবে
+app.get("/api/my-activities{/:userId}", async (req, res) => {
+  const userId = req.params.userId || req.query.userId;
 
   if (!userId) {
     return res.status(400).send({ message: "userId is required" });
@@ -440,6 +439,7 @@ app.get("/api/my-activities", async (req, res) => {
     .toArray();
   res.send(result);
 });
+
 
 // ── CHECK IF USER JOINED CHALLENGE ──
 app.get("/api/my-activities/check/:challengeId", async (req, res) => {
@@ -474,8 +474,7 @@ const updateActivityProgress = async (req, res) => {
 app.patch("/api/my-activities/:id/progress", updateActivityProgress);
 app.patch("/api/my-activities/:id", updateActivityProgress);
 
-// Export for Vercel
-module.exports = app;
+
 
 // Listen for local development (not Vercel)
 if (process.env.NODE_ENV !== 'production') {
