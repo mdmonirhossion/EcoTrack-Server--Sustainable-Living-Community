@@ -51,11 +51,13 @@ run();
 // ── ROOT ──
 app.get("/", (req, res) => res.send("🌿 EcoTrack Server Running!"));
 
+
 // ── SEED ──
 app.get("/seed", async (req, res) => {
   await challengesCollection.deleteMany({});
   await tipsCollection.deleteMany({});
   await eventsCollection.deleteMany({});
+  await userChallengesCollection.deleteMany({});
 
   await challengesCollection.insertMany([
     {
