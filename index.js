@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ObjectId } = require("mongodb");
-require("dotenv").config();
+require("dotenv").config({ override: true });
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -426,8 +426,7 @@ app.use("/api", (req, res, next) => {
 });
 
 // ── MY ACTIVITIES ──
-// :userId? দেওয়ার ফলে /api/my-activities/userID এবং /api/my-activities?userId=userID দুটিই কাজ করবে
-app.get("/api/my-activities{/:userId}", async (req, res) => {
+const getMyActivities = async (req, res) => {
   const userId = req.params.userId || req.query.userId;
 
   if (!userId) {
@@ -438,7 +437,9 @@ app.get("/api/my-activities{/:userId}", async (req, res) => {
     .find({ userId })
     .toArray();
   res.send(result);
-});
+};
+app.get("/api/my-activities", getMyActivities);
+app.get("/api/my-activities/:userId", getMyActivities);
 
 
 // ── CHECK IF USER JOINED CHALLENGE ──
